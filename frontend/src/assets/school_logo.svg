@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100" width="100%" height="100%">
+  <!-- Crest / Shield Icon -->
+  <g transform="translate(10, 10)">
+    <!-- Shield Background -->
+    <path d="M40 0 L75 15 L75 50 Q75 75 40 85 Q5 75 5 50 L5 15 Z" fill="#0B4F8A" stroke="#073763" stroke-width="2"/>
+    <path d="M40 5 L70 18 L70 48 Q70 70 40 79 Q10 70 10 48 L10 18 Z" fill="#FFFFFF" fill-opacity="0.15"/>
+    
+    <!-- Cross Motif (St. Martin's) -->
+    <path d="M40 15 L40 65 M25 32 L55 32" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round"/>
+    
+    <!-- Open Book / Learning Star -->
+    <path d="M26 62 Q33 58 40 62 Q47 58 54 62 L54 68 Q47 64 40 68 Q33 64 26 68 Z" fill="#F59E0B"/>
+    <polygon points="40,20 42,25 47,25 43,28 45,33 40,30 35,33 37,28 33,25 38,25" fill="#F59E0B" transform="translate(0, -5) scale(0.7)"/>
+  </g>
+
+  <!-- Typography -->
+  <g transform="translate(100, 20)">
+    <!-- School Name -->
+    <text x="0" y="24" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="800" fill="#0B4F8A" letter-spacing="0.5">
+      ST. MARTIN'S
+    </text>
+    <text x="0" y="44" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700" fill="#073763" letter-spacing="0.8">
+      MATRICULATION HR.SEC. SCHOOL
+    </text>
+    <!-- Motto / Tagline -->
+    <text x="0" y="62" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="500" fill="#64748B" letter-spacing="0.2">
+      Student Behaviour &amp; Discipline Monitoring System
+    </text>
+  </g>
+</svg>
