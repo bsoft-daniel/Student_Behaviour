@@ -1,13 +1,12 @@
 import React from 'react';
-import schoolLogoSvg from '../../assets/school_logo.svg';
-import schoolBadgeSvg from '../../assets/school_badge.svg';
+import schoolLogoImg from '../../assets/school_logo.png';
 
 export const SchoolLogo = ({ size = 40, showText = true, className = '', variant = 'full' }) => {
   if (!showText || variant === 'badge') {
     return (
       <img
-        src={schoolBadgeSvg}
-        alt="St. Martin's Badge"
+        src={schoolLogoImg}
+        alt="St. Martin's Logo"
         className={`shrink-0 object-contain ${className}`}
         style={{ width: `${size}px`, height: `${size}px` }}
       />
@@ -17,8 +16,8 @@ export const SchoolLogo = ({ size = 40, showText = true, className = '', variant
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <img
-        src={schoolBadgeSvg}
-        alt="St. Martin's Emblem"
+        src={schoolLogoImg}
+        alt="St. Martin's Logo"
         className="shrink-0 object-contain"
         style={{ width: `${size}px`, height: `${size}px` }}
       />
@@ -27,7 +26,7 @@ export const SchoolLogo = ({ size = 40, showText = true, className = '', variant
           ST. MARTIN'S
         </h2>
         <p className="text-[10px] sm:text-[11px] font-bold text-[#073763] tracking-wider uppercase leading-none">
-          MATRICULATION HR.SEC. SCHOOL
+          MATRIC. SCHOOL - ANDIMADAM
         </p>
       </div>
     </div>

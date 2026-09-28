@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Eye, EyeOff, Lock, User, ShieldCheck, 
-  ArrowRight, School, Users, CheckCircle2 
+  ArrowRight, School, Users, CheckCircle2, Camera
 } from 'lucide-react';
 import { SchoolLogo } from '../../components/common/SchoolLogo';
 import { Button } from '../../components/common/Button';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import campusFront from '../../assets/campus_front.jpg';
+import campusBuilding from '../../assets/campus_building.jpg';
+import campusPlayground from '../../assets/campus_playground.jpg';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
@@ -20,6 +23,20 @@ export const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [activePhotoIdx, setActivePhotoIdx] = useState(0);
+
+  const campusPhotos = [
+    { src: campusFront, title: 'Main Facade', desc: 'Administrative block and central entrance' },
+    { src: campusBuilding, title: 'Academic Wing', desc: 'Secondary & higher secondary classrooms' },
+    { src: campusPlayground, title: 'Playground', desc: 'Campus grounds & recreational facilities' },
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActivePhotoIdx((prev) => (prev + 1) % 3);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, []);
 
   const from = location.state?.from?.pathname || '/dashboard';
 
@@ -43,19 +60,18 @@ export const LoginPage = () => {
     }
   };
 
-  const handleQuickFill = (user, pass) => {
-    setUsername(user);
-    setPassword(pass);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50/50 to-slate-200 flex items-center justify-center p-4 sm:p-6 lg:p-8">
       <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[620px]">
-        {/* Left Section: School Branding */}
-        <div className="lg:col-span-6 bg-gradient-to-br from-[#073763] via-[#0B4F8A] to-[#1777C8] p-8 sm:p-12 text-white flex flex-col justify-between relative overflow-hidden">
-          {/* Subtle Background Shapes */}
-          <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-white/5 pointer-events-none" />
-          <div className="absolute -left-12 -bottom-12 w-80 h-80 rounded-full bg-white/5 pointer-events-none" />
+        {/* Left Section: Real School Campus Showcase */}
+        <div className="lg:col-span-6 p-8 sm:p-10 text-white flex flex-col justify-between relative overflow-hidden bg-[#073763]">
+          {/* Active Campus Photo */}
+          <img 
+            src={campusPhotos[activePhotoIdx].src} 
+            alt="St. Martin's School Campus"
+            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 opacity-60 scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#073763] via-[#073763]/75 to-[#073763]/85" />
 
           {/* Top Brand */}
           <div className="relative z-10">
@@ -73,34 +89,55 @@ export const LoginPage = () => {
           </div>
 
           {/* Center Showcase */}
-          <div className="my-8 relative z-10 space-y-4">
+          <div className="my-6 relative z-10 space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 text-xs font-bold border border-amber-400/30">
+              <Camera size={13} /> {campusPhotos[activePhotoIdx].title}
+            </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-snug">
-              Student Behaviour &amp; Discipline Monitoring System
+              Student Behaviour &amp; Conduct Monitoring System
             </h1>
             <p className="text-xs sm:text-sm text-blue-100/90 leading-relaxed max-w-md">
-              A comprehensive institutional platform designed to foster positive discipline, streamline roll-call attendance, and strengthen parent-teacher collaboration.
+              {campusPhotos[activePhotoIdx].desc}. Official institutional portal for daily attendance, conduct merit logs, and disciplinary updates.
             </p>
 
             {/* Feature Badges */}
-            <div className="pt-2 space-y-2">
+            <div className="pt-2 space-y-1.5">
               {[
-                'Database-driven Role Security (5 Access Levels)',
-                'Instant Conflict-Free Attendance Register',
-                'Comprehensive Incident Tracking & Follow-up Plans',
-                'Automated Parent Disciplinary Notifications'
+                'Strict Role-Based User Access Control',
+                'Live Class Attendance Register & Roll Call',
+                'Incident Tracking & Disciplinary Oversight'
               ].map((text, idx) => (
-                <div key={idx} className="flex items-center gap-2.5 text-xs text-blue-100">
-                  <CheckCircle2 size={16} className="text-amber-400 shrink-0" />
+                <div key={idx} className="flex items-center gap-2 text-xs text-blue-100">
+                  <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />
                   <span>{text}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Bottom Footer */}
-          <div className="relative z-10 pt-4 border-t border-white/15 text-[11px] text-blue-200/70 flex items-center justify-between">
-            <span>Official School Management Portal</span>
-            <span>Academic Year 2026-2027</span>
+          {/* Bottom Campus Thumbnail Strip */}
+          <div className="relative z-10 pt-3 border-t border-white/15">
+            <div className="text-[10px] uppercase tracking-wider text-blue-200/80 font-bold mb-2 flex items-center justify-between">
+              <span>Campus Facilities Gallery</span>
+              <span className="text-[9px] text-blue-300">Click to preview</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {campusPhotos.map((photo, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setActivePhotoIdx(i)}
+                  className={`relative h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                    activePhotoIdx === i ? 'border-amber-400 ring-2 ring-amber-400/30' : 'border-white/20 opacity-70 hover:opacity-100'
+                  }`}
+                >
+                  <img src={photo.src} alt={photo.title} className="w-full h-full object-cover" />
+                  <span className="absolute bottom-0 inset-x-0 bg-black/70 text-[9px] text-white font-medium text-center py-0.5 truncate">
+                    {photo.title}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -190,31 +227,6 @@ export const LoginPage = () => {
                 Sign In to Portal <ArrowRight size={16} className="ml-1" />
               </Button>
             </form>
-          </div>
-
-          {/* Quick Demo Role Picker Chips */}
-          <div className="mt-8 pt-4 border-t border-slate-100">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-              <ShieldCheck size={14} className="text-primary" /> Quick Demo Role Switcher:
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {[
-                { role: 'Admin', user: 'admin', pass: 'Admin@123', bg: 'bg-purple-50 text-purple-700 hover:bg-purple-100' },
-                { role: 'Teacher', user: 'teacher', pass: 'Teacher@123', bg: 'bg-blue-50 text-blue-700 hover:bg-blue-100' },
-                { role: 'Principal', user: 'principal', pass: 'Principal@123', bg: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' },
-                { role: 'Student', user: 'student', pass: 'Student@123', bg: 'bg-amber-50 text-amber-700 hover:bg-amber-100' },
-                { role: 'Parent', user: 'parent', pass: 'Parent@123', bg: 'bg-rose-50 text-rose-700 hover:bg-rose-100' },
-              ].map((chip) => (
-                <button
-                  key={chip.role}
-                  type="button"
-                  onClick={() => handleQuickFill(chip.user, chip.pass)}
-                  className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border border-transparent transition cursor-pointer ${chip.bg}`}
-                >
-                  {chip.role}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       </div>
