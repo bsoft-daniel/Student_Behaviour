@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Modal } from '../../components/common/Modal';
-import { Button } from '../../components/common/Button';
+import { AppModal } from '../../components/common/AppModal';
+import { FormInput, FormSelect, FormTextarea } from '../../components/common/FormField';
 import { useToast } from '../../context/ToastContext';
 import { behaviourApi } from '../../api/behaviourApi';
 import { studentApi } from '../../api/studentApi';
 import { masterApi } from '../../api/masterApi';
+import { User, Calendar, MapPin } from 'lucide-react';
 
 export const RecordBehaviourModal = ({ isOpen, onClose, onSuccess, preselectedStudentId = null }) => {
   const { showSuccess, showError } = useToast();
@@ -40,14 +41,23 @@ export const RecordBehaviourModal = ({ isOpen, onClose, onSuccess, preselectedSt
     }
   }, [preselectedStudentId]);
 
+  const toArray = (res) => {
+    if (!res) return [];
+    const payload = res.data?.data || res.data?.items || res.data;
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.items)) return payload.items;
+    return [];
+  };
+
   useEffect(() => {
     if (formData.category_id) {
       masterApi.getBehaviourTypes(formData.category_id).then(res => {
-        setTypes(res.data || []);
-        if (res.data && res.data.length > 0) {
-          setFormData(prev => ({ ...prev, type_id: res.data[0].id }));
+        const tList = toArray(res);
+        setTypes(tList);
+        if (tList.length > 0) {
+          setFormData(prev => ({ ...prev, type_id: tList[0].id }));
         }
-      }).catch(() => {});
+      }).catch(() => setTypes([]));
     } else {
       setTypes([]);
     }
@@ -62,19 +72,23 @@ export const RecordBehaviourModal = ({ isOpen, onClose, onSuccess, preselectedSt
         masterApi.getAcademicYears()
       ]);
 
-      setStudents(stdRes.data?.items || stdRes.data || []);
-      setCategories(catRes.data || []);
-      setSeverities(sevRes.data || []);
+      const sList = toArray(stdRes);
+      const cList = toArray(catRes);
+      const vList = toArray(sevRes);
+      const yList = toArray(yrsRes);
+
+      setStudents(sList);
+      setCategories(cList);
+      setSeverities(vList);
+      setAcademicYears(yList);
+
+      const currYear = yList.find(y => y.is_current) || yList[0];
       
-      const yrs = yrsRes.data || [];
-      setAcademicYears(yrs);
-      const currYear = yrs.find(y => y.is_current) || yrs[0];
-      
-      if (catRes.data && catRes.data.length > 0) {
+      if (cList.length > 0) {
         setFormData(prev => ({
           ...prev,
-          category_id: catRes.data[0].id,
-          severity_id: sevRes.data?.[0]?.id || '',
+          category_id: cList[0].id,
+          severity_id: vList[0]?.id || '',
           academic_year_id: currYear?.id || ''
         }));
       }
@@ -119,174 +133,140 @@ export const RecordBehaviourModal = ({ isOpen, onClose, onSuccess, preselectedSt
   };
 
   return (
-    <Modal
+    <AppModal
       isOpen={isOpen}
       onClose={onClose}
       title="Record Student Behaviour / Commendation"
-      maxWidth="max-w-2xl"
+      size="lg"
+      onConfirm={handleSubmit}
+      confirmText="Save Record"
+      cancelText="Cancel"
+      loading={submitting}
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form id="behaviour-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
           {!preselectedStudentId && (
-            <div className="md:col-span-2">
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Select Student <span className="text-rose-500">*</span>
-              </label>
-              <select
+            <div style={{ gridColumn: 'span 2' }}>
+              <FormSelect
+                label="Select Student"
                 name="student_id"
                 value={formData.student_id}
                 onChange={handleChange}
+                icon={User}
+                placeholder="-- Choose Student --"
                 required
-                className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
-              >
-                <option value="">-- Choose Student --</option>
-                {students.map(s => (
-                  <option key={s.id} value={s.id}>
-                    {s.first_name} {s.last_name || ''} ({s.class_name || s.class_room?.class_name || 'Class'} - {s.admission_number})
-                  </option>
-                ))}
-              </select>
+                options={(Array.isArray(students) ? students : []).map(s => ({
+                  value: s.id,
+                  label: `${s.first_name} ${s.last_name || ''} (${s.class_name || s.class_room?.class_name || 'Class'} - ${s.admission_number})`
+                }))}
+              />
             </div>
           )}
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Category <span className="text-rose-500">*</span>
-            </label>
-            <select
-              name="category_id"
-              value={formData.category_id}
-              onChange={handleChange}
-              required
-              className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
-            >
-              {categories.map(c => (
-                <option key={c.id} value={c.id}>{c.category_name} ({c.category_type})</option>
-              ))}
-            </select>
-          </div>
+          <FormSelect
+            label="Category"
+            name="category_id"
+            value={formData.category_id}
+            onChange={handleChange}
+            placeholder={null}
+            required
+            options={(Array.isArray(categories) ? categories : []).map(c => ({
+              value: c.id,
+              label: `${c.category_name} (${c.category_type})`
+            }))}
+          />
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Behaviour Type <span className="text-rose-500">*</span>
-            </label>
-            <select
-              name="type_id"
-              value={formData.type_id}
-              onChange={handleChange}
-              required
-              className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
-            >
-              {types.map(t => (
-                <option key={t.id} value={t.id}>{t.type_name}</option>
-              ))}
-            </select>
-          </div>
+          <FormSelect
+            label="Behaviour Type"
+            name="type_id"
+            value={formData.type_id}
+            onChange={handleChange}
+            placeholder={null}
+            required
+            options={(Array.isArray(types) ? types : []).map(t => ({
+              value: t.id,
+              label: t.type_name
+            }))}
+          />
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Severity Level <span className="text-rose-500">*</span>
-            </label>
-            <select
-              name="severity_id"
-              value={formData.severity_id}
-              onChange={handleChange}
-              required
-              className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
-            >
-              {severities.map(s => (
-                <option key={s.id} value={s.id}>{s.severity_name}</option>
-              ))}
-            </select>
-          </div>
+          <FormSelect
+            label="Severity Level"
+            name="severity_id"
+            value={formData.severity_id}
+            onChange={handleChange}
+            placeholder={null}
+            required
+            options={(Array.isArray(severities) ? severities : []).map(s => ({
+              value: s.id,
+              label: s.severity_name
+            }))}
+          />
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Incident Date</label>
-            <input
-              type="date"
-              name="incident_date"
-              value={formData.incident_date}
-              onChange={handleChange}
-              required
-              className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
-            />
-          </div>
+          <FormInput
+            type="date"
+            label="Incident Date"
+            name="incident_date"
+            value={formData.incident_date}
+            onChange={handleChange}
+            rightIcon={Calendar}
+            required
+          />
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Location</label>
-            <input
-              type="text"
+          <div style={{ gridColumn: 'span 2' }}>
+            <FormInput
+              label="Location"
               name="location"
               value={formData.location}
               onChange={handleChange}
+              icon={MapPin}
               placeholder="e.g. Classroom, Playground, Library"
-              className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
             />
           </div>
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">
-            Description of Incident / Commendation <span className="text-rose-500">*</span>
-          </label>
-          <textarea
-            rows={3}
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="Provide complete and objective facts..."
-            required
-            className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
-          />
-        </div>
+        <FormTextarea
+          label="Description of Incident / Commendation"
+          name="description"
+          value={formData.description}
+          onChange={handleChange}
+          placeholder="Provide complete and objective facts..."
+          required
+          rows={3}
+        />
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">
-            Immediate Action Taken / Faculty Remarks
-          </label>
-          <textarea
-            rows={2}
-            name="action_taken"
-            value={formData.action_taken}
-            onChange={handleChange}
-            placeholder="e.g. Verbal warning issued, seat rearranged, commendation badge awarded"
-            className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
-          />
-        </div>
+        <FormTextarea
+          label="Immediate Action Taken / Faculty Remarks"
+          name="action_taken"
+          value={formData.action_taken}
+          onChange={handleChange}
+          placeholder="e.g. Verbal warning issued, seat rearranged, commendation badge awarded"
+          rows={2}
+        />
 
-        <div className="flex flex-wrap gap-4 pt-2">
-          <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', paddingTop: '4px' }}>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', fontWeight: '600', color: '#334155', cursor: 'pointer' }}>
             <input
               type="checkbox"
               name="is_critical"
               checked={formData.is_critical}
               onChange={handleChange}
-              className="w-4 h-4 text-rose-600 rounded border-slate-300 focus:ring-rose-500"
+              style={{ width: '15px', height: '15px', accentColor: '#ef4444', borderRadius: '4px', cursor: 'pointer' }}
             />
             <span>Mark as Critical Case (Escalate to Principal)</span>
           </label>
 
-          <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', fontWeight: '600', color: '#334155', cursor: 'pointer' }}>
             <input
               type="checkbox"
               name="parent_notified"
               checked={formData.parent_notified}
               onChange={handleChange}
-              className="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary"
+              style={{ width: '15px', height: '15px', accentColor: '#168a9b', borderRadius: '4px', cursor: 'pointer' }}
             />
             <span>Parent Notified</span>
           </label>
         </div>
-
-        <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" variant="primary" loading={submitting}>
-            Save Record
-          </Button>
-        </div>
       </form>
-    </Modal>
+    </AppModal>
   );
 };

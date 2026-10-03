@@ -44,8 +44,12 @@ export const StudentDetailPage = () => {
         attendanceApi.getAll({ student_id: id })
       ]);
       setStudent(stdRes.data?.data || stdRes.data);
-      setIncidents(incRes.data?.items || incRes.data || []);
-      setAttendanceRecords(attRes.data?.items || attRes.data || []);
+
+      const incData = incRes.data?.items || incRes.data?.data || incRes.data;
+      setIncidents(Array.isArray(incData) ? incData : []);
+
+      const attData = attRes.data?.items || attRes.data?.data || attRes.data;
+      setAttendanceRecords(Array.isArray(attData) ? attData : []);
     } catch (err) {
       showError(err.response?.data?.error || 'Failed to load student dossier');
     } finally {
@@ -68,9 +72,12 @@ export const StudentDetailPage = () => {
     );
   }
 
+  const safeAttendance = Array.isArray(attendanceRecords) ? attendanceRecords : [];
+  const safeIncidents = Array.isArray(incidents) ? incidents : [];
+
   // Attendance metrics
-  const totalDays = attendanceRecords.length;
-  const presentDays = attendanceRecords.filter(a => (a.attendance_type?.type_name || a.status || '').toLowerCase() === 'present').length;
+  const totalDays = safeAttendance.length;
+  const presentDays = safeAttendance.filter(a => (a.attendance_type?.type_name || a.status || '').toLowerCase() === 'present').length;
   const attPct = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 100;
 
   return (

@@ -6,28 +6,18 @@ export const Card = ({
   title = null,
   subtitle = null,
   action = null,
-  padding = 'normal',
+  style = {},
   ...props
 }) => {
-  const paddings = {
-    none: 'p-0',
-    tight: 'p-3 sm:p-4',
-    normal: 'p-4 sm:p-6',
-    spacious: 'p-6 sm:p-8',
-  };
-
   return (
-    <div
-      className={`bg-white rounded-xl border border-slate-200 shadow-xs transition-shadow duration-200 hover:shadow-sm ${paddings[padding] || paddings.normal} ${className}`}
-      {...props}
-    >
+    <div className={`card ${className}`.trim()} style={style} {...props}>
       {(title || action) && (
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100 gap-2">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
           <div>
-            {title && <h3 className="font-bold text-slate-800 text-sm sm:text-base leading-tight">{title}</h3>}
-            {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+            {title && <h3 style={{ margin: 0 }}>{title}</h3>}
+            {subtitle && <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#67738a' }}>{subtitle}</p>}
           </div>
-          {action && <div className="shrink-0">{action}</div>}
+          {action && <div>{action}</div>}
         </div>
       )}
       {children}

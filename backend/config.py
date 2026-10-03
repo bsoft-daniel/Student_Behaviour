@@ -12,10 +12,10 @@ class Config:
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=7)
     
     # Database configuration
-    # Default to SQLite for seamless portability, with MySQL connection string configuration
+    # Connected to XAMPP MySQL / MariaDB (Database name: sbms)
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         'DATABASE_URL',
-        f"sqlite:///{os.path.join(BASE_DIR, '..', 'database', 'school.db')}"
+        'mysql+pymysql://root:@127.0.0.1:3306/sbms'
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
