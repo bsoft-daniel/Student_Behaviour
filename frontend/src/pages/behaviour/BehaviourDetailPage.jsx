@@ -9,7 +9,8 @@ import { Button } from '../../components/common/Button';
 import { PageHeader } from '../../components/common/PageHeader';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { LoadingState } from '../../components/common/LoadingState';
-import { Modal } from '../../components/common/Modal';
+import { AppModal } from '../../components/common/AppModal';
+import { FormInput, FormTextarea } from '../../components/common/FormField';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { behaviourApi } from '../../api/behaviourApi';
@@ -208,57 +209,46 @@ export const BehaviourDetailPage = () => {
       </div>
 
       {/* Follow-up Modal */}
-      <Modal
+      <AppModal
         isOpen={isFollowUpModalOpen}
         onClose={() => setIsFollowUpModalOpen(false)}
         title="Add Disciplinary Follow-up Remark"
+        size="md"
+        onConfirm={handleAddFollowUp}
+        confirmText="Save Follow-up"
+        cancelText="Cancel"
+        loading={submittingFollowUp}
       >
-        <form onSubmit={handleAddFollowUp} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Follow-up Date</label>
-            <input
-              type="date"
-              value={followUpData.follow_up_date}
-              onChange={(e) => setFollowUpData({ ...followUpData, follow_up_date: e.target.value })}
-              required
-              className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white"
-            />
-          </div>
+        <form id="followup-form" onSubmit={handleAddFollowUp} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <FormInput
+            type="date"
+            label="Follow-up Date"
+            value={followUpData.follow_up_date}
+            onChange={(e) => setFollowUpData({ ...followUpData, follow_up_date: e.target.value })}
+            rightIcon={Calendar}
+            required
+          />
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Counseling / Follow-up Remarks <span className="text-rose-500">*</span>
-            </label>
-            <textarea
-              rows={4}
-              value={followUpData.remarks}
-              onChange={(e) => setFollowUpData({ ...followUpData, remarks: e.target.value })}
-              placeholder="Enter meeting outcomes, behavioral improvements, or action plan..."
-              required
-              className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
-            />
-          </div>
+          <FormTextarea
+            label="Counseling / Follow-up Remarks"
+            value={followUpData.remarks}
+            onChange={(e) => setFollowUpData({ ...followUpData, remarks: e.target.value })}
+            placeholder="Enter meeting outcomes, behavioral improvements, or action plan..."
+            required
+            rows={4}
+          />
 
-          <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer pt-1">
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', fontWeight: '600', color: '#334155', cursor: 'pointer', paddingTop: '4px' }}>
             <input
               type="checkbox"
               checked={followUpData.resolve_incident}
               onChange={(e) => setFollowUpData({ ...followUpData, resolve_incident: e.target.checked })}
-              className="w-4 h-4 text-emerald-600 rounded"
+              style={{ width: '15px', height: '15px', accentColor: '#10b981', cursor: 'pointer' }}
             />
             <span>Mark incident status as Resolved</span>
           </label>
-
-          <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={() => setIsFollowUpModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" loading={submittingFollowUp}>
-              Save Follow-up
-            </Button>
-          </div>
         </form>
-      </Modal>
+      </AppModal>
     </div>
   );
 };

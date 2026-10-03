@@ -55,6 +55,14 @@ def get_behaviour_types():
 def get_severity_levels():
     return success_response(MasterService.get_severity_levels())
 
+@master_bp.route('/severity-levels', methods=['POST'])
+@token_required
+@role_required('admin', 'administrator')
+def create_severity_level():
+    data = request.get_json() or {}
+    sev = MasterService.create_severity_level(data)
+    return success_response(sev, message="Severity level created", status_code=201)
+
 @master_bp.route('/attendance-types', methods=['GET'])
 def get_attendance_types():
     return success_response(MasterService.get_attendance_types())

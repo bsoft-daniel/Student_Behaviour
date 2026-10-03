@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Modal } from '../../components/common/Modal';
-import { Button } from '../../components/common/Button';
+import { AppModal } from '../../components/common/AppModal';
+import { FormInput, FormSelect } from '../../components/common/FormField';
 import { useToast } from '../../context/ToastContext';
 import { userApi } from '../../api/userApi';
 import { masterApi } from '../../api/masterApi';
+import { User } from 'lucide-react';
 
 export const UserFormModal = ({ isOpen, onClose, onSuccess, userToEdit = null }) => {
   const { showSuccess, showError } = useToast();
@@ -25,11 +26,12 @@ export const UserFormModal = ({ isOpen, onClose, onSuccess, userToEdit = null })
 
   useEffect(() => {
     masterApi.getRoles().then(res => {
-      setRoles(res.data || []);
-      if (!isEdit && res.data?.length > 0) {
-        setFormData(prev => ({ ...prev, role_id: res.data[0].id }));
+      const list = Array.isArray(res.data?.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []);
+      setRoles(list);
+      if (!isEdit && list.length > 0) {
+        setFormData(prev => ({ ...prev, role_id: list[0].id }));
       }
-    }).catch(() => {});
+    }).catch(() => setRoles([]));
   }, []);
 
   useEffect(() => {
@@ -84,95 +86,76 @@ export const UserFormModal = ({ isOpen, onClose, onSuccess, userToEdit = null })
   };
 
   return (
-    <Modal
+    <AppModal
       isOpen={isOpen}
       onClose={onClose}
       title={isEdit ? 'Edit User Credentials' : 'Create System User'}
-      maxWidth="max-w-lg"
+      size="md"
+      onConfirm={handleSubmit}
+      confirmText={isEdit ? 'Save User' : 'Create User'}
+      cancelText="Cancel"
+      loading={submitting}
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Username</label>
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              disabled={isEdit}
-              required
-              className="w-full text-xs border border-slate-300 rounded-lg p-2.5 bg-white disabled:bg-slate-100"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="w-full text-xs border border-slate-300 rounded-lg p-2.5 bg-white"
-            />
-          </div>
-        </div>
+      <form id="user-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+          <FormInput
+            label="Username"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            icon={User}
+            disabled={isEdit}
+            required
+          />
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">First Name</label>
-            <input
-              type="text"
-              name="first_name"
-              value={formData.first_name}
-              onChange={handleChange}
-              required
-              className="w-full text-xs border border-slate-300 rounded-lg p-2.5 bg-white"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Last Name</label>
-            <input
-              type="text"
-              name="last_name"
-              value={formData.last_name}
-              onChange={handleChange}
-              className="w-full text-xs border border-slate-300 rounded-lg p-2.5 bg-white"
-            />
-          </div>
-        </div>
+          <FormInput
+            type="email"
+            label="Email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Role</label>
-            <select
-              name="role_id"
-              value={formData.role_id}
-              onChange={handleChange}
-              required
-              className="w-full text-xs border border-slate-300 rounded-lg p-2.5 bg-white"
-            >
-              {roles.map(r => <option key={r.id} value={r.id}>{r.role_name}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Password</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder={isEdit ? 'Leave blank to keep' : 'Account password'}
-              required={!isEdit}
-              className="w-full text-xs border border-slate-300 rounded-lg p-2.5 bg-white"
-            />
-          </div>
-        </div>
+          <FormInput
+            label="First Name"
+            name="first_name"
+            value={formData.first_name}
+            onChange={handleChange}
+            required
+          />
 
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary" loading={submitting}>Save User</Button>
+          <FormInput
+            label="Last Name"
+            name="last_name"
+            value={formData.last_name}
+            onChange={handleChange}
+          />
+
+          <FormSelect
+            label="Role"
+            name="role_id"
+            value={formData.role_id}
+            onChange={handleChange}
+            placeholder={null}
+            required
+            options={(Array.isArray(roles) ? roles : []).map(r => ({
+              value: r.id,
+              label: r.role_name
+            }))}
+          />
+
+          <FormInput
+            type="password"
+            label="Password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder={isEdit ? 'Leave blank to keep' : 'Account password'}
+            required={!isEdit}
+          />
         </div>
       </form>
-    </Modal>
+    </AppModal>
   );
 };

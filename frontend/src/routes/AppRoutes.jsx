@@ -1,8 +1,8 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { ProtectedRoute } from '../components/layout/ProtectedRoute';
-import { RoleRoute } from '../components/layout/RoleRoute';
-import { MainLayout } from '../components/layout/MainLayout';
+import { ProtectedRoute } from './ProtectedRoute';
+import { RoleRoute } from './RoleRoute';
+import { MainLayout } from '../layouts/MainLayout';
 
 // Auth
 import { LoginPage } from '../pages/auth/LoginPage';
@@ -33,7 +33,6 @@ import { RolePermissionsPage } from '../pages/users/RolePermissionsPage';
 import { MasterSettingsPage } from '../pages/masters/MasterSettingsPage';
 
 // Common
-import { NotificationCenterPage } from '../pages/notifications/NotificationCenterPage';
 import { SupportTicketsPage } from '../pages/support/SupportTicketsPage';
 import { AuditLogsPage } from '../pages/audit/AuditLogsPage';
 import { UserProfilePage } from '../pages/profile/UserProfilePage';
@@ -115,7 +114,6 @@ export const AppRoutes = () => {
         />
 
         {/* Common Profiles & Desks */}
-        <Route path="notifications" element={<NotificationCenterPage />} />
         <Route path="support" element={<SupportTicketsPage />} />
         <Route path="profile" element={<UserProfilePage />} />
       </Route>

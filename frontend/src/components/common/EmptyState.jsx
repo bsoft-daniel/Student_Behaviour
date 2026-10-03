@@ -8,15 +8,14 @@ export const EmptyState = ({
   description = 'There are no records matching your current filter criteria.',
   actionText = null,
   onAction = null,
-  className = '',
 }) => {
   return (
-    <div className={`flex flex-col items-center justify-center p-8 sm:p-12 text-center bg-white rounded-xl border border-dashed border-slate-300 ${className}`}>
-      <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem', textAlign: 'center', backgroundColor: '#ffffff', borderRadius: '1rem', border: '2px dashed #cbd5e1' }}>
+      <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', marginBottom: '0.75rem' }}>
         <Icon size={24} />
       </div>
-      <h3 className="text-sm sm:text-base font-bold text-slate-800">{title}</h3>
-      <p className="text-xs sm:text-sm text-slate-500 max-w-sm mt-1 mb-4">{description}</p>
+      <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#1e293b' }}>{title}</h3>
+      <p style={{ margin: '0.25rem 0 1rem 0', fontSize: '0.875rem', color: '#64748b', maxWidth: '380px' }}>{description}</p>
       {actionText && onAction && (
         <Button size="sm" onClick={onAction}>
           {actionText}

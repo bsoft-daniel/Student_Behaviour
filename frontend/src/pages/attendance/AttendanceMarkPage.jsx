@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Calendar, CheckCircle, XCircle, Clock, AlertTriangle, 
-  Save, RefreshCw, Users, ArrowRight 
+import {
+  Calendar, CheckCircle, XCircle, Clock, AlertTriangle,
+  Save, RefreshCw, Users, ArrowRight
 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -36,6 +36,14 @@ export const AttendanceMarkPage = () => {
     loadMasters();
   }, []);
 
+  const toArray = (res) => {
+    if (!res) return [];
+    const payload = res.data?.data || res.data?.items || res.data;
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.items)) return payload.items;
+    return [];
+  };
+
   const loadMasters = async () => {
     try {
       const [yearsRes, classesRes, typesRes] = await Promise.all([
@@ -43,15 +51,20 @@ export const AttendanceMarkPage = () => {
         masterApi.getClasses(),
         masterApi.getAttendanceTypes()
       ]);
-      setAcademicYears(yearsRes.data || []);
-      const activeYear = (yearsRes.data || []).find(y => y.is_current) || yearsRes.data?.[0];
+
+      const yList = toArray(yearsRes);
+      const cList = toArray(classesRes);
+      const tList = toArray(typesRes);
+
+      setAcademicYears(yList);
+      const activeYear = yList.find(y => y.is_current) || yList[0];
       if (activeYear) setSelectedYear(activeYear.id);
 
-      setClasses(classesRes.data || []);
-      if (classesRes.data && classesRes.data.length > 0) {
-        setSelectedClass(classesRes.data[0].id);
+      setClasses(cList);
+      if (cList.length > 0) {
+        setSelectedClass(cList[0].id);
       }
-      setAttendanceTypes(typesRes.data || []);
+      setAttendanceTypes(tList);
     } catch (err) {
       showError('Failed to load master filters');
     }
@@ -60,10 +73,10 @@ export const AttendanceMarkPage = () => {
   useEffect(() => {
     if (selectedClass) {
       masterApi.getSections(selectedClass).then(res => {
-        const secs = res.data || [];
+        const secs = toArray(res);
         setSections(secs);
         if (secs.length > 0) setSelectedSection(secs[0].id);
-      }).catch(() => {});
+      }).catch(() => setSections([]));
     } else {
       setSections([]);
     }
@@ -92,7 +105,7 @@ export const AttendanceMarkPage = () => {
         date: selectedDate
       });
       const existing = attRes.data?.items || attRes.data || [];
-      
+
       const presentType = attendanceTypes.find(t => t.type_name.toLowerCase() === 'present') || attendanceTypes[0];
       const initialMap = {};
 
@@ -157,7 +170,7 @@ export const AttendanceMarkPage = () => {
 
   const handleSaveAttendance = async () => {
     if (students.length === 0) return;
-    
+
     const recordsPayload = students.map(st => {
       const rec = records[st.id] || {};
       return {
@@ -213,7 +226,7 @@ export const AttendanceMarkPage = () => {
               className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
               required
             >
-              {academicYears.map(y => (
+              {(Array.isArray(academicYears) ? academicYears : []).map(y => (
                 <option key={y.id} value={y.id}>{y.year_name}</option>
               ))}
             </select>
@@ -228,7 +241,7 @@ export const AttendanceMarkPage = () => {
               required
             >
               <option value="">-- Select Class --</option>
-              {classes.map(c => (
+              {(Array.isArray(classes) ? classes : []).map(c => (
                 <option key={c.id} value={c.id}>{c.class_name}</option>
               ))}
             </select>
@@ -243,7 +256,7 @@ export const AttendanceMarkPage = () => {
               required
             >
               <option value="">-- Select Section --</option>
-              {sections.map(s => (
+              {(Array.isArray(sections) ? sections : []).map(s => (
                 <option key={s.id} value={s.id}>Section {s.section_name}</option>
               ))}
             </select>
@@ -345,7 +358,7 @@ export const AttendanceMarkPage = () => {
                             {attendanceTypes.map((type) => {
                               const isSelected = currentStatusId === type.id;
                               let btnClass = 'border-slate-200 text-slate-600 bg-white hover:bg-slate-50';
-                              
+
                               if (isSelected) {
                                 if (type.type_name.toLowerCase() === 'present') {
                                   btnClass = 'border-emerald-600 bg-emerald-600 text-white shadow-sm';

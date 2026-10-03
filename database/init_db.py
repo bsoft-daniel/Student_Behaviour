@@ -245,20 +245,71 @@ def init_database(app):
             curr_y = AcademicYear.query.filter_by(is_current=True).first()
 
             if c10 and secA and curr_y:
-                sample_student = Student(
-                    user_id=student_user.id,
-                    admission_number='STM2026001',
-                    roll_number='10A01',
-                    first_name='Rahul',
-                    last_name='Sharma',
-                    gender='Male',
-                    date_of_birth=datetime.date(2010, 8, 15),
-                    blood_group='O+',
-                    class_id=c10.id,
-                    section_id=secA.id,
-                    academic_year_id=curr_y.id
-                )
-                db.session.add(sample_student)
+                students_data = [
+                    ('STM2026001', '10A01', 'Rahul', 'Sharma', 'Male', datetime.date(2010, 8, 15), 'O+', student_user.id),
+                    ('STM2026002', '10A02', 'Priya', 'Dharshini', 'Female', datetime.date(2010, 5, 22), 'A+', None),
+                    ('STM2026003', '10A03', 'Karthik', 'Raja', 'Male', datetime.date(2010, 11, 10), 'B+', None),
+                    ('STM2026004', '10A04', 'Ananya', 'Venkatesh', 'Female', datetime.date(2010, 3, 18), 'AB+', None),
+                    ('STM2026005', '10A05', 'Vijay', 'Kumar', 'Male', datetime.date(2010, 9, 5), 'O-', None),
+                    ('STM2026006', '10A06', 'Sowmya', 'Narayanan', 'Female', datetime.date(2010, 1, 28), 'B-', None),
+                ]
+                created_students = []
+                for adm, roll, fname, lname, g, dob, bg, uid in students_data:
+                    st_obj = Student(
+                        user_id=uid,
+                        admission_number=adm,
+                        roll_number=roll,
+                        first_name=fname,
+                        last_name=lname,
+                        gender=g,
+                        date_of_birth=dob,
+                        blood_group=bg,
+                        class_id=c10.id,
+                        section_id=secA.id,
+                        academic_year_id=curr_y.id
+                    )
+                    db.session.add(st_obj)
+                    created_students.append(st_obj)
+                db.session.flush()
+
+                # Seed Attendance for Students
+                present_type = AttendanceType.query.filter_by(type_name='Present').first()
+                late_type = AttendanceType.query.filter_by(type_name='Late').first()
+                absent_type = AttendanceType.query.filter_by(type_name='Absent').first()
+                
+                today = datetime.date.today()
+                for idx, st in enumerate(created_students):
+                    att_status = present_type.id if idx % 4 != 0 else (late_type.id if idx % 2 == 0 else absent_type.id)
+                    db.session.add(Attendance(
+                        student_id=st.id,
+                        class_id=c10.id,
+                        section_id=secA.id,
+                        academic_year_id=curr_y.id,
+                        attendance_date=today,
+                        attendance_type_id=att_status,
+                        remarks='Regular Roll Call' if att_status == present_type.id else 'Bus delay / Leave letter'
+                    ))
+
+                # Seed Behaviour Incidents
+                b_cat = BehaviourCategory.query.first()
+                b_type = BehaviourType.query.first()
+                sev = SeverityLevel.query.filter_by(severity_name='Low').first() or SeverityLevel.query.first()
+                
+                if b_cat and b_type and sev and len(created_students) > 0:
+                    db.session.add(BehaviourIncident(
+                        incident_number='INC2026001',
+                        student_id=created_students[0].id,
+                        class_id=c10.id,
+                        section_id=secA.id,
+                        academic_year_id=curr_y.id,
+                        category_id=b_cat.id,
+                        behaviour_type_id=b_type.id,
+                        severity_id=sev.id,
+                        incident_date=today,
+                        description='Demonstrated exemplary participation during class discussion.',
+                        status='Resolved',
+                        recorded_by=1
+                    ))
 
         if User.query.filter_by(username='parent').first() is None:
             parent_user = User(

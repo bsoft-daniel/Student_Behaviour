@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Modal } from '../../components/common/Modal';
-import { Button } from '../../components/common/Button';
+import { AppModal } from '../../components/common/AppModal';
+import { FormInput, FormSelect, FormTextarea } from '../../components/common/FormField';
 import { useToast } from '../../context/ToastContext';
+import { AppSweetAlert } from '../../components/common/AppSweetAlert';
+import { User, Calendar, MapPin } from 'lucide-react';
 import { studentApi } from '../../api/studentApi';
 import { masterApi } from '../../api/masterApi';
 
@@ -30,24 +32,42 @@ export const StudentFormModal = ({ isOpen, onClose, onSuccess, studentToEdit = n
   });
 
   useEffect(() => {
-    masterApi.getClasses().then(res => setClasses(res.data || [])).catch(() => {});
+    masterApi.getClasses().then(res => {
+      const cls = Array.isArray(res.data?.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []);
+      setClasses(cls);
+    }).catch(() => setClasses([]));
+
     masterApi.getAcademicYears().then(res => {
-      const yrs = res.data || [];
+      const yrs = Array.isArray(res.data?.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []);
       setAcademicYears(yrs);
       if (!isEdit && yrs.length > 0) {
         const curr = yrs.find(y => y.is_current) || yrs[0];
         setFormData(prev => ({ ...prev, academic_year_id: curr.id }));
       }
-    }).catch(() => {});
+    }).catch(() => setAcademicYears([]));
   }, []);
 
   useEffect(() => {
     if (formData.class_id) {
-      masterApi.getSections(formData.class_id).then(res => setSections(res.data || [])).catch(() => {});
+      masterApi.getSections(formData.class_id).then(res => {
+        const secs = Array.isArray(res.data?.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []);
+        setSections(secs);
+      }).catch(() => setSections([]));
     } else {
       setSections([]);
     }
   }, [formData.class_id]);
+
+  const formatDateForInput = (d) => {
+    if (!d) return '';
+    try {
+      const date = new Date(d);
+      if (isNaN(date.getTime())) return '';
+      return date.toISOString().split('T')[0];
+    } catch {
+      return '';
+    }
+  };
 
   useEffect(() => {
     if (studentToEdit) {
@@ -57,7 +77,7 @@ export const StudentFormModal = ({ isOpen, onClose, onSuccess, studentToEdit = n
         first_name: studentToEdit.first_name || '',
         last_name: studentToEdit.last_name || '',
         gender: studentToEdit.gender || 'Male',
-        date_of_birth: studentToEdit.date_of_birth || '',
+        date_of_birth: formatDateForInput(studentToEdit.date_of_birth),
         blood_group: studentToEdit.blood_group || 'O+',
         address: studentToEdit.address || '',
         emergency_contact: studentToEdit.emergency_contact || '',
@@ -89,189 +109,181 @@ export const StudentFormModal = ({ isOpen, onClose, onSuccess, studentToEdit = n
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setSubmitting(true);
     try {
       if (isEdit) {
         await studentApi.update(studentToEdit.id, formData);
-        showSuccess('Student profile updated successfully');
+        showSuccess(`Updated student profile for ${formData.first_name}`);
+        AppSweetAlert.success({
+          title: 'Student Profile Updated!',
+          text: `Record for ${formData.first_name} ${formData.last_name} saved successfully.`
+        });
       } else {
         await studentApi.create(formData);
-        showSuccess('Student enrolled successfully');
+        showSuccess(`Enrolled student ${formData.first_name}`);
+        AppSweetAlert.success({
+          title: 'Student Enrolled!',
+          text: `Student ${formData.first_name} ${formData.last_name} registered successfully.`
+        });
       }
       onSuccess();
       onClose();
     } catch (err) {
       showError(err.response?.data?.error || 'Failed to save student details');
+      AppSweetAlert.error({
+        title: 'Save Failed',
+        text: err.response?.data?.error || 'Could not save student details.'
+      });
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <Modal
+    <AppModal
       isOpen={isOpen}
       onClose={onClose}
       title={isEdit ? 'Edit Student Profile' : 'Enrol New Student'}
-      maxWidth="max-w-2xl"
+      size="lg"
+      onConfirm={handleSubmit}
+      confirmText={isEdit ? 'Save Changes' : 'Enrol Student'}
+      cancelText="Cancel"
+      loading={submitting}
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Admission Number <span className="text-rose-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="admission_number"
-              value={formData.admission_number}
-              onChange={handleChange}
-              disabled={isEdit}
-              required
-              className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none disabled:bg-slate-100"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Roll Number</label>
-            <input
-              type="text"
-              name="roll_number"
-              value={formData.roll_number}
-              onChange={handleChange}
-              className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              First Name <span className="text-rose-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="first_name"
-              value={formData.first_name}
-              onChange={handleChange}
-              required
-              className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Last Name</label>
-            <input
-              type="text"
-              name="last_name"
-              value={formData.last_name}
-              onChange={handleChange}
-              className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Gender</label>
-            <select
-              name="gender"
-              value={formData.gender}
-              onChange={handleChange}
-              className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
-            >
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Date of Birth</label>
-            <input
-              type="date"
-              name="date_of_birth"
-              value={formData.date_of_birth}
-              onChange={handleChange}
-              className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Class</label>
-            <select
-              name="class_id"
-              value={formData.class_id}
-              onChange={handleChange}
-              required
-              className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
-            >
-              <option value="">-- Select Class --</option>
-              {classes.map(c => (
-                <option key={c.id} value={c.id}>{c.class_name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Section</label>
-            <select
-              name="section_id"
-              value={formData.section_id}
-              onChange={handleChange}
-              required
-              disabled={!formData.class_id}
-              className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none disabled:bg-slate-100"
-            >
-              <option value="">-- Select Section --</option>
-              {sections.map(s => (
-                <option key={s.id} value={s.id}>Section {s.section_name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Emergency Contact Phone</label>
-            <input
-              type="tel"
-              name="emergency_contact"
-              value={formData.emergency_contact}
-              onChange={handleChange}
-              className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Blood Group</label>
-            <select
-              name="blood_group"
-              value={formData.blood_group}
-              onChange={handleChange}
-              className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
-            >
-              {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(b => (
-                <option key={b} value={b}>{b}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">Address</label>
-          <textarea
-            rows={2}
-            name="address"
-            value={formData.address}
+      <form id="student-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+          {/* Admission Number */}
+          <FormInput
+            label="Admission Number"
+            name="admission_number"
+            value={formData.admission_number}
             onChange={handleChange}
-            className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
+            disabled={isEdit}
+            required
+          />
+
+          {/* Roll Number */}
+          <FormInput
+            label="Roll Number"
+            name="roll_number"
+            value={formData.roll_number}
+            onChange={handleChange}
+          />
+
+          {/* First Name */}
+          <FormInput
+            label="First Name"
+            name="first_name"
+            value={formData.first_name}
+            onChange={handleChange}
+            icon={User}
+            required
+          />
+
+          {/* Last Name */}
+          <FormInput
+            label="Last Name"
+            name="last_name"
+            value={formData.last_name}
+            onChange={handleChange}
+            icon={User}
+            required
+          />
+
+          {/* Gender */}
+          <FormSelect
+            label="Gender"
+            name="gender"
+            value={formData.gender}
+            onChange={handleChange}
+            placeholder={null}
+            options={[
+              { value: 'Male', label: 'Male' },
+              { value: 'Female', label: 'Female' },
+              { value: 'Other', label: 'Other' }
+            ]}
+          />
+
+          {/* Date of Birth */}
+          <FormInput
+            type="date"
+            label="Date of Birth"
+            name="date_of_birth"
+            value={formData.date_of_birth}
+            onChange={handleChange}
+            rightIcon={Calendar}
+          />
+
+          {/* Class */}
+          <FormSelect
+            label="Class"
+            name="class_id"
+            value={formData.class_id}
+            onChange={handleChange}
+            placeholder="Select Class"
+            required
+            options={(Array.isArray(classes) ? classes : []).map(c => ({
+              value: c.id,
+              label: c.class_name
+            }))}
+          />
+
+          {/* Section */}
+          <FormSelect
+            label="Section"
+            name="section_id"
+            value={formData.section_id}
+            onChange={handleChange}
+            placeholder="Select Section"
+            disabled={!formData.class_id}
+            required
+            options={(Array.isArray(sections) && sections.length > 0 ? sections : [
+              { id: 1, section_name: 'A' },
+              { id: 2, section_name: 'B' },
+              { id: 3, section_name: 'C' }
+            ]).map(s => {
+              if (typeof s === 'string') {
+                return { value: s, label: `Section ${s}` };
+              }
+              const name = s.section_name || s.name || s.label || s.id;
+              return {
+                value: s.id || name,
+                label: name.toString().startsWith('Section') ? name : `Section ${name}`
+              };
+            })}
+          />
+
+          {/* Emergency Contact Phone */}
+          <FormInput
+            type="tel"
+            label="Emergency Contact Phone"
+            name="emergency_contact"
+            value={formData.emergency_contact}
+            onChange={handleChange}
+          />
+
+          {/* Blood Group */}
+          <FormSelect
+            label="Blood Group"
+            name="blood_group"
+            value={formData.blood_group}
+            onChange={handleChange}
+            placeholder={null}
+            options={['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']}
           />
         </div>
 
-        <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" variant="primary" loading={submitting}>
-            {isEdit ? 'Save Changes' : 'Enrol Student'}
-          </Button>
-        </div>
+        {/* Address */}
+        <FormTextarea
+          label="Address"
+          name="address"
+          value={formData.address}
+          onChange={handleChange}
+          icon={MapPin}
+          rows={2}
+        />
       </form>
-    </Modal>
+    </AppModal>
   );
 };

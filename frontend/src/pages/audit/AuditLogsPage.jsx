@@ -16,7 +16,7 @@ import { Button } from '../../components/common/Button';
 import { DataTable } from '../../components/common/DataTable';
 import { Pagination } from '../../components/common/Pagination';
 import { LoadingState } from '../../components/common/LoadingState';
-import { Modal } from '../../components/common/Modal';
+import { AppModal } from '../../components/common/AppModal';
 import { auditApi } from '../../api/auditApi';
 import { useToast } from '../../context/ToastContext';
 
@@ -46,8 +46,12 @@ export const AuditLogsPage = () => {
         action: actionFilter || undefined,
         module: moduleFilter || undefined,
       });
-      setLogs(res.data?.items || res.data || []);
-      setTotal(res.data?.total || (res.data?.items ? res.data.items.length : 0));
+      const payload = res.data?.data !== undefined ? res.data.data : res.data;
+      const list = Array.isArray(payload) ? payload : (Array.isArray(payload?.items) ? payload.items : []);
+      const totalCount = payload?.total !== undefined ? payload.total : list.length;
+
+      setLogs(list);
+      setTotal(totalCount);
     } catch (err) {
       addToast(err.message || 'Failed to fetch system audit logs', 'error');
     } finally {
@@ -160,50 +164,7 @@ export const AuditLogsPage = () => {
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-9 pr-3 py-2 bg-neutral-50 border border-neutral-300 rounded-lg text-xs text-neutral-900 focus:bg-white focus:border-primary-500 outline-none"
             />
-          </div>
-
-          <div>
-            <select
-              value={actionFilter}
-              onChange={(e) => {
-                setActionFilter(e.target.value);
-                setPage(1);
-              }}
-              className="w-full px-3 py-2 bg-neutral-50 border border-neutral-300 rounded-lg text-xs text-neutral-900 focus:bg-white focus:border-primary-500 outline-none"
-            >
-              <option value="">All Actions</option>
-              <option value="LOGIN">LOGIN</option>
-              <option value="CREATE">CREATE</option>
-              <option value="UPDATE">UPDATE</option>
-              <option value="DELETE">DELETE</option>
-              <option value="EXPORT">EXPORT</option>
-            </select>
-          </div>
-
-          <div>
-            <select
-              value={moduleFilter}
-              onChange={(e) => {
-                setModuleFilter(e.target.value);
-                setPage(1);
-              }}
-              className="w-full px-3 py-2 bg-neutral-50 border border-neutral-300 rounded-lg text-xs text-neutral-900 focus:bg-white focus:border-primary-500 outline-none"
-            >
-              <option value="">All Modules</option>
-              <option value="auth">Authentication</option>
-              <option value="student">Students</option>
-              <option value="behaviour">Behaviour</option>
-              <option value="attendance">Attendance</option>
-              <option value="user">User Management</option>
-            </select>
-          </div>
-
-          <div>
-            <Button type="submit" size="sm" icon={Filter} className="w-full">
-              Apply Filter
-            </Button>
-          </div>
-        </form>
+          </div>        </form>
       </Card>
 
       {/* Log Table */}
@@ -232,10 +193,13 @@ export const AuditLogsPage = () => {
 
       {/* Detail Modal */}
       {selectedLog && (
-        <Modal
+        <AppModal
           isOpen={!!selectedLog}
           onClose={() => setSelectedLog(null)}
           title={`Audit Event #${selectedLog.id}`}
+          size="md"
+          cancelText="Close"
+          showFooter={true}
         >
           <div className="space-y-4 text-xs">
             <div className="grid grid-cols-2 gap-3 p-3 bg-neutral-50 rounded-xl border border-neutral-200">
@@ -274,14 +238,8 @@ export const AuditLogsPage = () => {
                 </pre>
               </div>
             )}
-
-            <div className="flex justify-end pt-2">
-              <Button variant="secondary" onClick={() => setSelectedLog(null)}>
-                Close
-              </Button>
-            </div>
           </div>
-        </Modal>
+        </AppModal>
       )}
     </div>
   );

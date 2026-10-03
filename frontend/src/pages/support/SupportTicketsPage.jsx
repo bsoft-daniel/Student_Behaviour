@@ -16,7 +16,8 @@ import { Button } from '../../components/common/Button';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { EmptyState } from '../../components/common/EmptyState';
 import { LoadingState } from '../../components/common/LoadingState';
-import { Modal } from '../../components/common/Modal';
+import { AppModal } from '../../components/common/AppModal';
+import { FormInput, FormSelect, FormTextarea } from '../../components/common/FormField';
 import { supportApi } from '../../api/supportApi';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -181,85 +182,72 @@ export const SupportTicketsPage = () => {
       )}
 
       {/* Modal: New Ticket */}
-      <Modal
+      <AppModal
         isOpen={isNewModalOpen}
         onClose={() => setIsNewModalOpen(false)}
         title="Submit Support Inquiry"
+        size="md"
+        onConfirm={handleCreateTicket}
+        confirmText="Submit Inquiry"
+        cancelText="Cancel"
       >
-        <form onSubmit={handleCreateTicket} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1">
-              Subject / Topic *
-            </label>
-            <input
-              type="text"
+        <form id="ticket-form" onSubmit={handleCreateTicket} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <FormInput
+            label="Subject / Topic"
+            placeholder="e.g. Clarification regarding attendance marking on 24th Sept"
+            value={ticketForm.subject}
+            onChange={(e) => setTicketForm({ ...ticketForm, subject: e.target.value })}
+            required
+          />
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+            <FormSelect
+              label="Category"
+              value={ticketForm.category}
+              onChange={(e) => setTicketForm({ ...ticketForm, category: e.target.value })}
+              placeholder={null}
               required
-              placeholder="e.g. Clarification regarding attendance marking on 24th Sept"
-              value={ticketForm.subject}
-              onChange={(e) => setTicketForm({ ...ticketForm, subject: e.target.value })}
-              className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-lg text-sm text-neutral-900 focus:bg-white focus:border-primary-500 outline-none"
+              options={[
+                { value: 'behaviour', label: 'Behaviour & Conduct' },
+                { value: 'attendance', label: 'Attendance Discrepancy' },
+                { value: 'academic', label: 'Academic / Homework' },
+                { value: 'general', label: 'General Institution Query' }
+              ]}
+            />
+
+            <FormSelect
+              label="Priority"
+              value={ticketForm.priority}
+              onChange={(e) => setTicketForm({ ...ticketForm, priority: e.target.value })}
+              placeholder={null}
+              required
+              options={[
+                { value: 'low', label: 'Low' },
+                { value: 'normal', label: 'Normal' },
+                { value: 'urgent', label: 'Urgent' }
+              ]}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1">
-                Category *
-              </label>
-              <select
-                value={ticketForm.category}
-                onChange={(e) => setTicketForm({ ...ticketForm, category: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-lg text-sm text-neutral-900 focus:bg-white focus:border-primary-500 outline-none"
-              >
-                <option value="behaviour">Behaviour & Conduct</option>
-                <option value="attendance">Attendance Discrepancy</option>
-                <option value="academic">Academic / Homework</option>
-                <option value="general">General Institution Query</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1">
-                Priority *
-              </label>
-              <select
-                value={ticketForm.priority}
-                onChange={(e) => setTicketForm({ ...ticketForm, priority: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-lg text-sm text-neutral-900 focus:bg-white focus:border-primary-500 outline-none"
-              >
-                <option value="low">Low</option>
-                <option value="normal">Normal</option>
-                <option value="urgent">Urgent</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1">
-              Detailed Explanation *
-            </label>
-            <textarea
-              rows={4}
-              required
-              placeholder="Describe your query or request for clarification in detail..."
-              value={ticketForm.message}
-              onChange={(e) => setTicketForm({ ...ticketForm, message: e.target.value })}
-              className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-lg text-sm text-neutral-900 focus:bg-white focus:border-primary-500 outline-none resize-none"
-            />
-          </div>
-          <div className="flex justify-end gap-2 pt-4">
-            <Button variant="secondary" onClick={() => setIsNewModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit">Submit Inquiry</Button>
-          </div>
+
+          <FormTextarea
+            label="Detailed Explanation"
+            placeholder="Describe your query or request for clarification in detail..."
+            value={ticketForm.message}
+            onChange={(e) => setTicketForm({ ...ticketForm, message: e.target.value })}
+            required
+            rows={4}
+          />
         </form>
-      </Modal>
+      </AppModal>
 
       {/* Modal: View Ticket Discussion */}
       {selectedTicket && (
-        <Modal
+        <AppModal
           isOpen={!!selectedTicket}
           onClose={() => setSelectedTicket(null)}
           title={`Ticket: ${selectedTicket.subject}`}
           size="lg"
+          showFooter={false}
         >
           <div className="space-y-6">
             {/* Ticket Header Meta */}
@@ -341,7 +329,7 @@ export const SupportTicketsPage = () => {
               </form>
             )}
           </div>
-        </Modal>
+        </AppModal>
       )}
     </div>
   );
